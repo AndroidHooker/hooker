@@ -1,0 +1,26 @@
+# Git ignore file
+# ===============
+
+# prevent python bytecode
+*.py[cod]
+*.egg-info
+
+# prevent APKInstrumenter binary directory
+APKInstrumenter/bin
+
+# prevent logs
+*.log
+
+# prevent latex build files
+*.aux
+*.bbl
+*.blg
+*.ids
+*.ilg
+*.ind
+*.toc
+*.idx
+*.pdf
+
+# prevent other files
+*~

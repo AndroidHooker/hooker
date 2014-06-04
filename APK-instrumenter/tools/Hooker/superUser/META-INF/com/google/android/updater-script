@@ -1,0 +1,14 @@
+ui_print("Superuser 3.1.3 for Android 2.0-4.1 arm");
+ui_print("Mounting system...");
+run_program("/sbin/busybox", "mount", "/system");
+ui_print("Deleting old files...");
+delete("/system/bin/su","/system/xbin/su","/system/app/Superuser.apk");
+ui_print("Copying files...");
+package_extract_dir("system", "/system");
+ui_print("Fixing permissions...");
+set_perm(0, 0, 06755, "/system/bin/su");
+ui_print("Symlinking...");
+symlink("/system/bin/su", "/system/xbin/su");
+ui_print("Unmounting system...");
+run_program("/sbin/busybox", "umount", "/system");
+ui_print("Installation complete!");

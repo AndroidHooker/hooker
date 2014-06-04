@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Created-By: 1.0 (Android SignApk)
+
+Name: META-INF/com/google/android/updater-script
+SHA1-Digest: FFHrKbK9/QSeHJLkm87HEl8CnC8=
+
+Name: system/app/Superuser.apk
+SHA1-Digest: vX1vDXiPrP94uVy9hmLJKlT0QLM=
+
+Name: META-INF/com/google/android/update-binary
+SHA1-Digest: 7LjhI2kUKoWfvQFHyInm+pcJigY=
+
+Name: system/bin/su
+SHA1-Digest: EoXH3Hp3D7lwehlj8TZk9rfw/k4=
+
