@@ -16,7 +16,7 @@ A set of python scripts can be used to automatize the execution of an analysis i
 Technical Description
 ---------------------
 
-Hooker is made of three main tools. 
+Hooker is made of multiple modules:
 
 1. **APK-instrumenter** is an Android application that must be installed prior to the analysis on an Android device (for instance, an emulator).
 2. **hooker_xp** is a python tool that can be use to control the android device and trigger the installation and stimulation of an application on it.
@@ -129,7 +129,7 @@ Contributing
 ============
 
 We would be delighted if you could help us improve this work.
-Please us github features to provide your bugfixes and improvements.
+Please use github features to provide your bugfixes and improvements.
 
 Authors and Sponsors
 ====================
