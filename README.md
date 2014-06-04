@@ -17,20 +17,20 @@ Technical Description
 ---------------------
 
 Hooker is made of three main tools. 
-1) APK-instrumenter is an Android application that must be installed prior to the analysis on an Android device (for instance, an emulator).
-2) hooker_xp is a python tool that can be use to control the android device and trigger the installation and stimulation of an application on it.
-3) hooker_analysis is a python script that can be use to collect results stored in the elasticsearch database.
 
-In addition to these, Hooker also denotes various tools located in the tools/ directory
-4) APK-contactGenerator is an Android application that is automatically installed on the Android device by hooker_xp to inject fake contact informations.
-5) apk_retriever is a Python tool that can be use to download APKs from various online public Android markets.
-6) emulatorCreator is a script that can be use to prepare an emulator.
+1. **APK-instrumenter** is an Android application that must be installed prior to the analysis on an Android device (for instance, an emulator).
+2. **hooker_xp** is a python tool that can be use to control the android device and trigger the installation and stimulation of an application on it.
+3. **hooker_analysis** is a python script that can be use to collect results stored in the elasticsearch database.
+4. **tools/APK-contactGenerator** is an Android application that is automatically installed on the Android device by hooker_xp to inject fake contact informations.
+5. **tools/apk_retriever** is a Python tool that can be use to download APKs from various online public Android markets.
+6. **tools/emulatorCreator** is a script that can be use to prepare an emulator.
 
 More Information
 ----------------
-:Website: `https://github.com/AndroidHooker/hooker <https://github.com/AndroidHooker/hooker>`_
-:Email: `android-hooker@amossys.fr <android-hooker@amossys.fr>`_
-:Twitter: Follow authors account (@Tibapbedoum and @Lapeluche)
+
+* **Website:** [https://github.com/AndroidHooker/hooker](https://github.com/AndroidHooker/hooker)
+* **Email:** [android-hooker@amossys.fr](android-hooker@amossys.fr)
+* **Twitter:** Follow authors account (@Tibapbedoum and @Lapeluche)
 
 Get Started
 ===========
@@ -116,7 +116,7 @@ Setup your configuration file
 * Depending on your system configuration, complete the different parameters. Sample configuration files are verbose++, so please read comments
 * In relation with previous steps, you need to specify the path to your reference AVD you just built. As the comments explain it, just put the path + name of AVD, i.e. without the .avd extension
 
-Run your experiment
+Run your Experiment
 -------------------
 
 Python experiment script is in hooker_xp directory:
@@ -135,4 +135,4 @@ Authors and Sponsors
 ====================
 
 The Hooker project has been initiated by Georges Bossert and Dimitri Kirchner.
-Both work for Amossys, a french IT security company `http://www.amossys.fr <http://www.amossys.fr>`_
+Both work for Amossys, a french IT security company [http://www.amossys.fr](http://www.amossys.fr)
