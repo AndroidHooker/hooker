@@ -19,7 +19,7 @@
 #| along with this program. If not, see <http://www.gnu.org/licenses/>.      |
 #+---------------------------------------------------------------------------+
 #| @url      : http://www.amossys.fr                                         |
-#| @contact  : @todo                                                         |
+#| @contact  : android-hooker@amossys.fr                                     |
 #| @sponsors : Amossys, http://www.amossys.fr                                |
 #+---------------------------------------------------------------------------+
 
