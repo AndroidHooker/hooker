@@ -49,7 +49,8 @@ class Reporter(object):
         self._logger = Logger.getLogger(__name__)
         self.reportingConfiguration = reportingConfiguration
         self.__initializeReporters()
-        self.esInterrogator = EsInterrogator(self.es)
+        if self.reportingConfiguration.elasticsearchMode:
+            self.esInterrogator = EsInterrogator(self.es)
 
     def createReport(self, idXp, emulatorName, author, packageName, filename, filesha1, typeAnalysis, descAnalysis):
         """Creates a new report to collect events produced while executing experiment IdXp"""

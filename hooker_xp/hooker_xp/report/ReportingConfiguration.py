@@ -63,8 +63,10 @@ class ReportingConfiguration(object):
 
         # parses elasticsearch mode
         if 'elasticsearch_mode' in reportingOptions.keys():
-            esMode = bool(reportingOptions['elasticsearch_mode'])
-        if esMode:            
+            if reportingOptions['elasticsearch_mode'] == 'True':
+                esMode=True
+                
+        if esMode:
             # elasticsearch ip
             if not 'elasticsearch_ip' in reportingOptions.keys():
                 raise Exception("ElasticSearch mode is activated, but no 'elasticsearch_ip' specified.")
@@ -87,7 +89,8 @@ class ReportingConfiguration(object):
 
         # parses file mode
         if 'file_mode' in reportingOptions.keys():
-            fileMode = bool(reportingOptions['file_mode'])
+            if reportingOptions['file_mode'] == 'True':
+                fileMode = True
                 
         return ReportingConfiguration(esMode, esIp, esPort, esIndex, esDoctype, fileMode)
 
@@ -152,7 +155,8 @@ class ReportingConfiguration(object):
     @elasticsearchIndex.setter
     def elasticsearchIndex(self, elasticsearchIndex):
         if elasticsearchIndex is None:
-            raise Exception("An elasticsearch index must be set")
+            if self.__elasticsearchMode == 'True':
+                raise Exception("An elasticsearch index must be set")
         self.__elasticsearchIndex = elasticsearchIndex
 
     @property
@@ -164,7 +168,8 @@ class ReportingConfiguration(object):
     @elasticsearchDoctype.setter
     def elasticsearchDoctype(self, elasticsearchDoctype):
         if elasticsearchDoctype is None:
-            raise Exception("An elasticsearch doctype must be set")
+            if self.__elasticsearchMode == 'True':
+                raise Exception("An elasticsearch doctype must be set")
         self.__elasticsearchDoctype = elasticsearchDoctype
         
     @property
