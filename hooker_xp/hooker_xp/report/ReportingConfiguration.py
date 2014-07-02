@@ -63,7 +63,7 @@ class ReportingConfiguration(object):
 
         # parses elasticsearch mode
         if 'elasticsearch_mode' in reportingOptions.keys():
-            if reportingOptions['elasticsearch_mode'] == 'True':
+            if reportingOptions['elasticsearch_mode'].lower() == 'true':
                 esMode=True
                 
         if esMode:
@@ -89,7 +89,7 @@ class ReportingConfiguration(object):
 
         # parses file mode
         if 'file_mode' in reportingOptions.keys():
-            if reportingOptions['file_mode'] == 'True':
+            if reportingOptions['file_mode'].lower() == 'true':
                 fileMode = True
                 
         return ReportingConfiguration(esMode, esIp, esPort, esIndex, esDoctype, fileMode)
