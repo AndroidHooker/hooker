@@ -52,8 +52,8 @@ Setup Android SDK
 
 You can download Android bundle here: http://developer.android.com/sdk/index.html. If you want to use the Hooker install script, you have to:
 * Make sure to set your `ANDROID_HOME` environment variable:
- 
-   $ export ANDROID_HOME=/path/to/your/sdk/folder
+
+    $ export ANDROID_HOME=/path/to/your/sdk/folder
 
 * Download SDK API 16 from the SDK manager.
 
