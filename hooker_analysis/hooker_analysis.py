@@ -430,7 +430,6 @@ def main():
     # ======================================================
 
     # macroAnalyzeConnectTo(esInterrogator)    
-    # deleteDuplicatedAPK(esInterrogator))    
     # macroAnalyzeCrypto(esInterrogator)
     # macroAnalyzeTelephony(esInterrogator)
     # macroAnalyzeNetwork(esInterrogator)

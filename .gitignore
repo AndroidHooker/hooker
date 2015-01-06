@@ -5,6 +5,11 @@
 *.py[cod]
 *.egg-info
 
+*/build/
+*/dist/
+tools/APK-Test/bin/
+tools/APK-Test/gen/
+
 # prevent APKInstrumenter binary directory
 APKInstrumenter/bin
 

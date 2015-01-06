@@ -35,11 +35,12 @@ class ManualAnalysisConfiguration(object):
     """A container that stores all the parameters of a manual analysis
     """
 
-    def __init__(self, apkFiles, name=None, maxNumberOfEmulators=1, prepareAPKs=None):        
+    def __init__(self, apkFiles, name=None, maxNumberOfEmulators=1, prepareAPKs=None, backupDirectory=None):
         self.apkFiles = apkFiles
         self.prepareAPKs = prepareAPKs
         self.name = name
         self.maxNumberOfEmulators = maxNumberOfEmulators
+        self.backupDirectory = backupDirectory
 
     def __str__(self):
         """toString method"""
@@ -48,7 +49,8 @@ class ManualAnalysisConfiguration(object):
             "\t- Name\t\t\t{0}".format(self.name),
             "\t- APKs\t\t\t{0}".format(','.join(self.apkFiles)),
             "\t- Nb Emulators\t\t{0}".format(self.maxNumberOfEmulators),
-            "\t- Preparation APKs\t{0}".format(','.join(self.prepareAPKs))            
+            "\t- Preparation APKs\t{0}".format(','.join(self.prepareAPKs)),
+            "\t- Backup directory\t{0}".format(self.backupDirectory)
             ]
         return '\n'.join(lines)
         
@@ -100,3 +102,12 @@ class ManualAnalysisConfiguration(object):
             prepareAPKs = []
         self.__prepareAPKs = prepareAPKs
         
+    @property
+    def backupDirectory(self):
+        """The backup directory for the analysis
+        """
+        return self.__backupDirectory
+
+    @backupDirectory.setter
+    def backupDirectory(self, backupDirectory):
+        self.__backupDirectory = backupDirectory

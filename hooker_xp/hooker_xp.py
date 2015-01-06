@@ -55,7 +55,6 @@ def main():
     elif commandLineParser.automaticAnalysisRequested:
         # Automated analysis
         analysis = AutomaticAnalysis(commandLineParser)
-
     else:
         # No analysis specified
         logger.warning("No analysis requested.")

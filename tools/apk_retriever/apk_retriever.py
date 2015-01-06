@@ -34,7 +34,7 @@ from hooker_common import Logger
 ES_HOST = "127.0.0.1"
 ES_PORT = 9200
 
-def createDirectory(directory, force=True):
+def createDirectory(directory, force=False):
     """Create the specified directory but fails if the directory already
     exists unless force is set to True. In that case, we delete it and re-create it"""
     logger = Logger.getLogger(__name__)
@@ -43,10 +43,11 @@ def createDirectory(directory, force=True):
     if os.path.exists(directory):
         if force:
             shutil.rmtree(directory)
+            os.mkdir(directory)
         else:
-            raise Exception("Specified directoryalready exists, cannot create it.")
+            raise Exception("Specified directory already exists, cannot create it.")
     else:
-        os.mkdirs(directory)    
+        os.mkdir(directory)
 
 def createTemporaryFolder():
     """Create a random named temporary folder."""
@@ -93,10 +94,24 @@ APK_Retriever - Automated APK Retriever from Online Android Markets.
     
     outputFolder = sys.argv[1]
 
+    try:
+        createDirectory(outputFolder)
+    except Exception as e:
+        logger.warn("{0}".format(e))
+        while True:
+            response = raw_input("Do you want to overwrite this folder ? [yes or no] ")
+            if response == 'yes':
+                createDirectory(outputFolder, True)
+                break
+            if response == 'no':
+                exit()
+            else:
+                logger.warn("Response is either yes or no")
+
     from apk_retriever.SlideMeMarket import SlideMeMarket
     
     markets = [
-        SlideMeMarket(),
+        SlideMeMarket()
     ]
 
     

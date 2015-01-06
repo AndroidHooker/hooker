@@ -53,8 +53,5 @@ class OSCommand(object):
             commandAndArgs = shlex.split(commandAndArgs)
         
         logger.debug("Executing command {0}".format(commandAndArgs))
-        try:
-            return subprocess.check_output(commandAndArgs, stderr=subprocess.STDOUT)
-        except Exception, e:
-            logger.error("Error occured while executing command : {0}".format(e))
-            return None
+        return subprocess.check_output(commandAndArgs, stderr=subprocess.STDOUT)
+

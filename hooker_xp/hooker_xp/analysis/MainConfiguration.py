@@ -27,6 +27,7 @@
 #| Standard library imports
 #+---------------------------------------------------------------------------+
 import os
+import platform
 
 #+---------------------------------------------------------------------------+
 #| Local imports
@@ -37,15 +38,34 @@ class MainConfiguration(object):
     """A container that stores all the parameters required to start an analysis
     """
 
-    def __init__(self, referenceAVD, androidSDKPath, androidTemporaryPath, androguardPath):
-        self.referenceAVD = referenceAVD
+    def __init__(self, referenceAVD, androidSDKPath, androidTemporaryPath, androguardPath, typeOfDevice, deviceId):
         self.androidSDKPath = androidSDKPath
         self.androidTemporaryPath = androidTemporaryPath
-        self.virtualDevicePath = os.path.dirname(referenceAVD)
-        self.emulatorPath = os.path.join(androidSDKPath, "tools/emulator64-arm")
+
+        # Make the assumption that if platform is 64 bit, we have emulator64
+        if '64bit' == (platform.architecture()[0]):
+            if not os.path.exists(os.path.join(androidSDKPath, "tools/emulator64-arm")):
+                raise Exception("File {0} doesn't exist".format(os.path.join(androidSDKPath, "tools/emulator64-arm")))
+            self.emulatorPath = os.path.join(androidSDKPath, "tools/emulator64-arm")
+        elif '32bit' == (platform.architecture()[0]):
+            if not os.path.exists(os.path.join(androidSDKPath, "tools/emulator-arm")):
+                raise Exception("File {0} doesn't exist".format(os.path.join(androidSDKPath, "tools/emulator-arm")))
+            self.emulatorPath = os.path.join(androidSDKPath, "tools/emulator-arm")
+        else:
+            raise Exception("Platform architecture is not recognized: {0}".format(platform.architecture()[0]))
+        
         self.adbPath = os.path.join(androidSDKPath, "platform-tools/adb")
         self.androguardPath = androguardPath
-    
+        self.typeOfDevice = typeOfDevice
+        # Differentiate real and emulated configurations
+        if self.typeOfDevice=='real':
+            self.deviceId=deviceId
+            self.referenceAVD = None
+        else:
+            self.referenceAVD = referenceAVD
+            self.virtualDevicePath = os.path.dirname(referenceAVD)
+
+            
     @staticmethod
     def build(commandLineParser):
         """Builds and returns a MainConfiguration based on values
@@ -55,15 +75,28 @@ class MainConfiguration(object):
             raise Exception("Cannot build the main configuration if no commandLineParser is provided")
 
         mainOptions = commandLineParser.mainOptions
-        
-        if not 'referenceavd' in mainOptions.keys():
-            raise Exception("The referenceAVD configuration entry is missing.")
-        refAvdDirectory = mainOptions['referenceavd'] + '.avd/'
-        if not os.path.isdir(refAvdDirectory):
-            raise Exception("'{0}' is not a directory.".format(refAvdDirectory))
-        if not os.access(refAvdDirectory, os.R_OK):
-            raise Exception("You don't have read access to directory {0}.".format(refAvdDirectory))
-        refAVD = mainOptions['referenceavd']
+
+        if 'device' in mainOptions.keys():
+            typeOfDevice = mainOptions['device']
+            if not (typeOfDevice=='real' or typeOfDevice=='emulated'):
+                raise Exception("Type of device must be \"real\" or \"emulated\"")
+
+        deviceId=None
+        if typeOfDevice=='real':
+            if 'deviceid' in mainOptions.keys():
+                deviceId = mainOptions['deviceid']
+            else:
+                raise Exception("You must specify deviceid if you are using a real device")
+            refAVD = None
+        else:
+            if not 'referenceavd' in mainOptions.keys():
+                raise Exception("The referenceAVD configuration entry is missing.")
+            refAvdDirectory = mainOptions['referenceavd'] + '.avd/'
+            if not os.path.isdir(refAvdDirectory):
+                raise Exception("'{0}' is not a directory.".format(refAvdDirectory))
+            if not os.access(refAvdDirectory, os.R_OK):
+                raise Exception("You don't have read access to directory {0}.".format(refAvdDirectory))
+            refAVD = mainOptions['referenceavd']
 
         if not 'androidsdkpath' in mainOptions.keys():
             raise Exception("The androidSDKPath configuration entry is missing.")
@@ -89,7 +122,7 @@ class MainConfiguration(object):
         if not os.access(androguardPath, os.R_OK):
             raise Exception("You don't have read access to directory {0}.".format(androguardPath))
 
-        return MainConfiguration(refAVD, androidSDKPath, androidTemporaryPath, androguardPath)
+        return MainConfiguration(refAVD, androidSDKPath, androidTemporaryPath, androguardPath, typeOfDevice, deviceId)
 
     def __str__(self):
         """toString method"""
@@ -97,7 +130,8 @@ class MainConfiguration(object):
             "Main Conf:",
             "\t- SDK\t\t\t{0}".format(self.androidSDKPath),            
             "\t- Ref. AVD\t\t{0}".format(self.referenceAVD),
-            "\t- Androguard\t\t{0}".format(self.androguardPath)
+            "\t- Androguard\t\t{0}".format(self.androguardPath),
+            "\t- Type of device\t{0}".format(self.typeOfDevice)
             ]
         return '\n'.join(lines)
         
@@ -109,7 +143,7 @@ class MainConfiguration(object):
 
     @referenceAVD.setter
     def referenceAVD(self, referenceAVD):
-        if referenceAVD is None:
+        if referenceAVD is None and self.__typeOfDevice=='emulated':
             raise Exception("The reference AVD cannot be null.")
             
         self.__referenceAVD = referenceAVD
@@ -185,3 +219,23 @@ class MainConfiguration(object):
         if androguardPath is None:
             raise Exception("The androguard path cannot be null.")
         self.__androguardPath = androguardPath
+
+    @property
+    def typeOfDevice(self):
+        return self.__typeOfDevice
+
+    @typeOfDevice.setter
+    def typeOfDevice(self, typeOfDevice):
+        if typeOfDevice is None:
+            raise Exception("Type of device cannot be null.")
+        self.__typeOfDevice = typeOfDevice
+        
+    @property
+    def deviceId(self):
+        return self.__deviceId
+
+    @deviceId.setter
+    def deviceId(self, deviceId):
+        if deviceId is None and typeOfDevice=='real':
+                raise Exception("DeviceId cannot be null.")
+        self.__deviceId = deviceId

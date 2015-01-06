@@ -23,7 +23,7 @@ echo "Installing application Superuser"
 $ADB install superUser/system/app/Superuser.apk
 
 # Check if you have the same partition here
-$ADB shell mount -o rw,remount -t yaffs2 /dev/block/mtdblock0 /system
+$ADB shell mount -o rw,remount -t ext4 /dev/block/mtdblock0 /system
 
 echo "Pushing /system/xbin/su binary"
 $ADB push $BINSU /system/xbin/su

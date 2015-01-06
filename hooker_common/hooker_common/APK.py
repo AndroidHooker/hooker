@@ -5,8 +5,7 @@ import os
 import hashlib
 
 class APK(object):
-    """Definition of an APK downloaded from
-    a Market.
+    """Definition of an APK downloaded from a Market.
 
     An APK is defined by:
     - its APKID
@@ -21,13 +20,14 @@ class APK(object):
     - its sha1
 
     """
-
+    
     def __init__(self, APKID, filepath, name=None, url=None, version=None, author=None, category=None, description=None):
-        self.APKID = APKID
-        self.filepath = filepath
-        self.filename = self.__computeFilename(filepath)
-        self.filesize = self.__computeFilesize(filepath)
-        self.sha1 = self.__computeSha1(filepath)
+        if APKID is not None:
+            self.APKID = APKID
+            self.filepath = filepath
+            self.filename = self.__computeFilename(filepath)
+            self.filesize = self.__computeFilesize(filepath)
+            self.sha1 = self.__computeSha1(filepath)            
         self.name = name
         self.url = url
         self.version = version
@@ -53,6 +53,14 @@ class APK(object):
                 hasher.update(buf)
                 buf = afile.read(BLOCKSIZE)
         return hasher.hexdigest()
+
+    def updateAPK(self, APKID, filepath):
+        """ Updates APK when parameters relative to APKID and filenpath are not yet set """
+        self.APKID = APKID
+        self.filepath = filepath
+        self.filename = self.__computeFilename(filepath)
+        self.filesize = self.__computeFilesize(filepath)
+        self.sha1 = self.__computeSha1(filepath)
         
     #
     # Properties

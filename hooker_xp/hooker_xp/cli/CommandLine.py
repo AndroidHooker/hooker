@@ -27,6 +27,7 @@
 #| Standard library imports
 #+---------------------------------------------------------------------------+
 import argparse
+import os
 from ConfigParser import ConfigParser
 
 #+---------------------------------------------------------------------------+
@@ -61,23 +62,26 @@ class CommandLine(object):
         configFile = namespace.c
 
         try:
-            self.__parseConfigFile(configFile)
+            self.__parseConfigFile(configFile[0])
         except Exception, e:
-            self._logger.fatal("An error occured while parsing the configuration file '{0}': {1}".format(configFile, e))
+            self._logger.fatal("An error occured while parsing the configuration file: {0}".format(e))
         
     def __parseConfigFile(self, configFile):
         """Parses and set the appropriate attributes once
         having parsed the specified configuration file."""
+        if not os.path.exists(configFile):
+            raise Exception("configuration file '{0}' doesn't exist.".format(configFile))
+        
         config = ConfigParser()
-
-        try :
+        
+        try:
             # reads the config file
             config.read(configFile)
 
             # parse sections
             sections = config.sections()
         except:
-            raise Exception("The configuration file is either not specified or is not readable.")
+            raise Exception("Configuration file is not readable.")
         
         
         # reads the main entry

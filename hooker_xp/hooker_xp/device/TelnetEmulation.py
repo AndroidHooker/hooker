@@ -42,15 +42,19 @@ class TelnetEmulation(object):
     This class has to be continued. In particular, things have to be done to make interactions different between each execution.
     """
 
-    def __init__(self, reporter, idXp, emulator, emulatorNumber, host="127.0.0.1"):
+    def __init__(self, reporter, idXp, emulator, host="127.0.0.1"):
         self._logger = Logger.getLogger(__name__)
-        self.emulatorNumber = emulatorNumber
         self.emulator = emulator
+        self.emulatorNumber = emulator.emulatorId
         self.reporter = reporter
         self.idXp = idXp
         self.__telnetPort = 5554 + (self.emulatorNumber*2)
-        self.__emulatorSerialNumber = "emulator-{0}".format(self.__telnetPort)
         self.__host = host
+        
+        if emulator.mainConfiguration.typeOfDevice=='emulated':
+            self.__emulatorSerialNumber = "emulator-{0}".format(self.__telnetPort)
+        else:
+            self.__emulatorSerialNumber = emulator.name
 
         
     def start(self):
@@ -73,7 +77,7 @@ class TelnetEmulation(object):
             random.seed()
             for function in list_functions:
                 function()
-                n = random.randint(2, 10)
+                n = random.randint(20, 30)
                 self._logger.debug("Sleeping for {0} seconds".format(n))
                 time.sleep(n)
 

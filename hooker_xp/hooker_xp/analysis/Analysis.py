@@ -33,7 +33,8 @@ import hashlib
 #+---------------------------------------------------------------------------+
 #| Local imports
 #+---------------------------------------------------------------------------+
-from hooker_xp.avd.AVDEmulator import AVDEmulator
+from hooker_xp.device.AVDEmulator import AVDEmulator
+from hooker_xp.device.PhysicalDevice import PhysicalDevice
 from hooker_common import Logger
 from hooker_xp.report.Reporter import Reporter
 
@@ -118,29 +119,36 @@ class Analysis(object):
         
         return idXp
 
+        
     def _createEmulator(self, emulatorNumber, emulatorName):
         """Creates a new emulator and returns it"""
-        return Analysis.createEmulator(emulatorNumber, emulatorName, self.mainConfiguration)
+        return Analysis.createDevice(emulatorNumber, emulatorName, self.mainConfiguration, None)
 
+        
     @staticmethod
-    def createEmulator(emulatorNumber, emulatorName, mainConfiguration):        
+    def createDevice(adbNumber, name, mainConfiguration, backupDirectory):
         logger = Logger.getLogger(__name__)
 
-        if emulatorNumber is None or int(emulatorNumber)<0:
-            raise Exception("Cannot create an emulator with an invalid emulator number, must be >0")
+        if adbNumber is None or int(adbNumber)<0:
+            raise Exception("Cannot create a device with an invalid adb number, must be >0")
 
-        if emulatorName is None or len(emulatorName)==0:
-            raise Exception("Cannot create an emulator if not name is provided.")
+        if name is None or len(name)==0:
+            raise Exception("Cannot create a device if no name is provided.")
             
+        logger.debug("Creation of new device named '{0}'.".format(name))
         
-        logger.debug("Creation of new emulator named '{0}'.".format(emulatorName))
-        return AVDEmulator(emulatorNumber, emulatorName, mainConfiguration)
+        if mainConfiguration.typeOfDevice=='real':
+            return PhysicalDevice(adbNumber, name, mainConfiguration, backupDirectory)
+        else:
+            return AVDEmulator(adbNumber, name, mainConfiguration)
 
+            
     def _writeConfigurationOnEmulator(self, emulator, idXP):
         """Creates a configuration for the current analysis
         and deploys it on the provided emulator."""
         Analysis.writeConfigurationOnEmulator(emulator, idXP, self.reportingConfiguration)
 
+        
     @staticmethod
     def writeConfigurationOnEmulator(emulator, idXP, reportingConfiguration):
         logger = Logger.getLogger(__name__)

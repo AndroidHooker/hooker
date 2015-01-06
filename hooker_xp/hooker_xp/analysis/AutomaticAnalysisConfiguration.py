@@ -33,13 +33,14 @@
 from hooker_xp.analysis.ManualAnalysisConfiguration import ManualAnalysisConfiguration
 
 class AutomaticAnalysisConfiguration(ManualAnalysisConfiguration):
-    """A container that stores all the parameters of a manual analysis
+    """A container that stores all the parameters of an automatic analysis
     """
 
-    def __init__(self, apkFiles, prepareAPKs=None, scenario=None, outputDirectory=None, name=None, maxNumberOfEmulators=1):
+    def __init__(self, apkFiles, prepareAPKs=None, scenario=None, outputDirectory=None, name=None, maxNumberOfEmulators=1, backupDirectory=None):
         super(AutomaticAnalysisConfiguration, self).__init__(apkFiles, name, maxNumberOfEmulators, prepareAPKs)
         self.scenario = scenario
         self.outputDirectory = outputDirectory
+        self.backupDirectory = backupDirectory
 
     def __str__(self):
         """toString method"""
@@ -50,7 +51,8 @@ class AutomaticAnalysisConfiguration(ManualAnalysisConfiguration):
             "\t- Nb Emulators\t\t{0}".format(self.maxNumberOfEmulators),
             "\t- Preparation APKs\t{0}".format(','.join(self.prepareAPKs)),
             "\t- Scenario\t\t{0}".format(','.join(self.scenario)),
-            "\t- Output directory\t{0}".format(self.outputDirectory)
+            "\t- Output directory\t{0}".format(self.outputDirectory),
+            "\t- Backup directory\t{0}".format(self.backupDirectory)
             ]
         return '\n'.join(lines)
         
@@ -77,3 +79,13 @@ class AutomaticAnalysisConfiguration(ManualAnalysisConfiguration):
         if outputDirectory is None:
             raise Exception("You must provide an output directory to store analyzed APKs.")
         self.__outputDirectory = outputDirectory
+
+    @property
+    def backupDirectory(self):
+        """The backup directory for the analysis
+        """
+        return self.__backupDirectory
+
+    @backupDirectory.setter
+    def backupDirectory(self, backupDirectory):
+        self.__backupDirectory = backupDirectory

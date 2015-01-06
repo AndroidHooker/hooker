@@ -58,7 +58,7 @@ public class FileEventReporter extends AbstractReporter {
   @Override
   protected void report(InterceptEvent event) {
     SubstrateMain.log("File reporter write to file an event.");
-    this.writeToFile(event.toJson());
+    this.writeToFile("{IDXP:"+event.getIDXP()+",payload:"+event.toJson()+"}");
   }
 
   /**

@@ -38,6 +38,8 @@ from hooker_xp.analysis.ManualAnalysisConfiguration import ManualAnalysisConfigu
 from hooker_xp.report.ReportingConfiguration import ReportingConfiguration
 from hooker_xp.analysis.MainConfiguration import MainConfiguration
 from hooker_xp.analysis.StaticAnalysis import StaticAnalysis
+from hooker_xp.device.AVDEmulator import AVDEmulator
+
 
 class ManualAnalysis(Analysis):
     """Executes a single analysis of an Android application.
@@ -51,14 +53,12 @@ class ManualAnalysis(Analysis):
         self.analysisConfiguration = self.__prepareAnalysis(commandLineParser)
         
     def start(self):
-        """Starts the current manual analysis"""
+        """Starts a manual analysis"""
 
         if self.mainConfiguration is None:
             raise Exception("No main configuration found, cannot start the analysis..")
-
         if self.reportingConfiguration is None:
             raise Exception("No reporting configuration found, cannot start the analysis.")
-        
         if self.analysisConfiguration is None:
             raise Exception("No analysis configuration found, cannot start the analysis.")
 
@@ -85,52 +85,67 @@ class ManualAnalysis(Analysis):
         self._logger.info(staticAnalysis)
         
         Analysis.reportEvent(self.reporter, idXp, "Emulator", "creation of the Emulator {0}".format(emulatorName))
-        emulator = self._createEmulator(iEmulator, emulatorName)        
+        
+        if self.mainConfiguration.typeOfDevice=='emulated':
 
-        if emulator is None:
-            raise Exception("Something has prevented the creation of an emulator.")
+            # first step is to create the templates for all our emulators
+            self._logger.debug("Create {0} templates, one for each emulator".format(self.analysisConfiguration.maxNumberOfEmulators))
+            AVDEmulator.createTemplates(self.mainConfiguration, self.analysisConfiguration)
+            device = self._createEmulator(iEmulator, emulatorName)
+        else:
+            device = Analysis.createDevice(iEmulator, self.mainConfiguration.deviceId, self.mainConfiguration, self.analysisConfiguration.backupDirectory)
 
-        # Starts the emulator
+        if device is None:
+            raise Exception("Something has prevented the creation of an device.")
+
+        # Starts the device
         Analysis.reportEvent(self.reporter, idXp, "Emulator", "start")
-        emulator.start()
+        device.start()
 
         # Install preparation applications
-        for prepareAPK in self.analysisConfiguration.prepareAPKs:
-            Analysis.reportEvent(self.reporter, idXp, "Emulator", "installAPK", prepareAPK)
-            emulator.installAPK(prepareAPK)
+        # A real device do not need preparation applications
+        if self.mainConfiguration.typeOfDevice=='emulated':
+            for prepareAPK in self.analysisConfiguration.prepareAPKs:
+                Analysis.reportEvent(self.reporter, idXp, "Emulator", "installAPK", prepareAPK)
+                device.installAPK(prepareAPK)
 
-        # Execute preparation applications
-        for prepareAPK in self.analysisConfiguration.prepareAPKs:
-            Analysis.reportEvent(self.reporter, idXp, "Emulator", "startActivity", os.path.basename(prepareAPK)[:-4])
-            emulator.startActivity(os.path.basename(prepareAPK)[:-4])        
+            # Execute preparation applications
+            for prepareAPK in self.analysisConfiguration.prepareAPKs:
+                Analysis.reportEvent(self.reporter, idXp, "Emulator", "startActivity", os.path.basename(prepareAPK)[:-4])
+                device.startActivity(os.path.basename(prepareAPK)[:-4])
+        else:
+            self._logger.debug("Continuing...")
 
-        # Writes the experiment configuration on the emulator
+        # Writes the experiment configuration on the device
         Analysis.reportEvent(self.reporter, idXp, "Emulator", "writeConfiguration")
-        self._writeConfigurationOnEmulator(emulator, idXp)
+        self._writeConfigurationOnEmulator(device, idXp)
 
-        sleepDuration = 30
-        self._logger.debug("Waiting {0} seconds for the emulator to prepare...".format(sleepDuration))
-        time.sleep(sleepDuration)
+        if self.mainConfiguration.typeOfDevice=='emulated':
+            sleepDuration = 30
+            self._logger.debug("Waiting {0} seconds for the device to prepare...".format(sleepDuration))
+            time.sleep(sleepDuration)
         
         # Install the targeted application
         for analysisAPK in self.analysisConfiguration.apkFiles:
             Analysis.reportEvent(self.reporter, idXp, "Emulator", "installAPK", analysisAPK)
-            emulator.installAPK(analysisAPK)
+            device.installAPK(analysisAPK)
 
         Analysis.reportEvent(self.reporter, idXp, "Emulator", "Launching main activity", staticAnalysis.mainActivity)
         self._logger.info("Starting main activity: {0}".format(staticAnalysis.mainActivity))
-        emulator.startActivityFromPackage(staticAnalysis.packageName, staticAnalysis.mainActivity)
+        device.startActivityFromPackage(staticAnalysis.packageName, staticAnalysis.mainActivity)
 
         # The user is now requested to perform any operations he wants
-        # this script waits for the emulator process to be closed
+        # this script waits for the device process to be closed
         self._logger.info("Proceed to the stimulation of the environnment.")
-        self._logger.info("Once achieved, close the emulator and waits for the hooker to finish.")
+        self._logger.info("Once achieved, close the device and waits for the hooker to finish.")
         Analysis.reportEvent(self.reporter, idXp, "Emulator", "waitToBeClosed")
         
-        emulator.waitToBeClosed()
+        device.waitToBeClosed()
+        if self.mainConfiguration.typeOfDevice=='real':
+            device.stop(True)
 
         Analysis.reportEvent(self.reporter, idXp, "Emulator", "closed")
-        self._logger.info("Emulator has finished.")        
+        self._logger.info("Device has finished, IDXP is {0}".format(idXp))
         
 
     def __prepareAnalysis(self, commandLineParser):
@@ -158,8 +173,8 @@ class ManualAnalysis(Analysis):
                 apkFiles.append(apkFile)
 
         analysisName = None
-        if 'analysisname' in analysisOptions.keys():
-            analysisName = analysisOptions['analysisname']
+        if 'name' in analysisOptions.keys():
+            analysisName = analysisOptions['name']
 
         maxNumberOfEmulators = 1
         if 'maxnumberofemulators' in analysisOptions.keys():
@@ -178,9 +193,17 @@ class ManualAnalysis(Analysis):
                     if not os.access(prepareAPK, os.R_OK):
                         raise Exception("The prepareAPK {0} cannot be read, check the permissions.".format(prepareAPK))
                     prepareAPKs.append(prepareAPK)
-            
-        self._logger.debug("Configure the manual analysis.")        
-        analysis = ManualAnalysisConfiguration(apkFiles, name=analysisName, maxNumberOfEmulators=maxNumberOfEmulators, prepareAPKs=prepareAPKs)
+
+        backupDirectory = None
+        if 'backupdirectory' in analysisOptions.keys():
+            backupDirectory = analysisOptions['backupdirectory']
+            if not os.path.isdir(backupDirectory):
+                raise Exception("{0} is not a valid directory, you must provide one in automatic mode.".format(backupDirectory))
+            if not os.access(backupDirectory, os.R_OK):
+                raise Exception("You don't have read access to directory {0}.".format(backupDirectory))
+                    
+        self._logger.debug("Configure the manual analysis.")
+        analysis = ManualAnalysisConfiguration(apkFiles, name=analysisName, maxNumberOfEmulators=maxNumberOfEmulators, prepareAPKs=prepareAPKs, backupDirectory=backupDirectory)
 
         return analysis
 
