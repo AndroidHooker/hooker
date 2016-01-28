@@ -183,7 +183,7 @@ class TelnetEmulation(object):
             self.session.write("gsm data off\r\n")
             self._checkAnswer(1)
         else:
-            self._logger.errr("Error: Cannot make GSM voice on")
+            self._logger.error("Error: Cannot make GSM voice on")
             
 
     def _simulate2Gto3G(self):

@@ -26,7 +26,6 @@
 #+---------------------------------------------------------------------------+
 #| Standard library imports
 #+---------------------------------------------------------------------------+
-import sys
 import uuid
 
 #+---------------------------------------------------------------------------+
@@ -57,13 +56,16 @@ class Reporter(object):
         if idXp is None:
             raise Exception("Cannot create a report if no IdXP is provided.")
 
+        if packageName is not None:
+            self.__packageName = packageName
+
         # Checks if we have an APK associated with IDXP in ES
         if self.es is not None:
             if self.esInterrogator is not None:
                 try:
                     self.esInterrogator.getAPKInXP(idXp)
                     self._logger.info("APK found associated with IDXP {0}, continuing".format(idXp))
-                except Exception, e:
+                except Exception:
                     self._logger.info("No APK found associated with IDXP {0}".format(idXp))
                     apkid = str(uuid.uuid4())
                     apk = APK(apkid, filename, filename, "no-market/"+filename)
@@ -85,10 +87,9 @@ class Reporter(object):
             raise Exception("Cannot create a report if no IdXP is provided.")
 
         if self.es is not None:
-            #idXp, relTime, hookerName, packageName, className, methodName, params=None):
             relTime = 0 # TODO
-            methodName = paramsEvent
-            self.es.insertEventInformationOnAPK(idXp, relTime, hookerName=sourceEvent, packageName="Unknown", className=actionEvent, methodName=methodName, params=None)
+            # Example: reportEvent(idXp, "Emulator", "Write configuration file")
+            self.es.insertExperimentSteps(idXp, relTime, emulator=sourceEvent, description=actionEvent)
 
     def reportStaticEvent(self, idXp, filename, packageName, androidVersionName, androidVersionCode, minSDKVersion, maxSDKVersion, mainActivity, activities, providers, libraries, services, receivers, permissions):
         """Insert in the report a new static event."""

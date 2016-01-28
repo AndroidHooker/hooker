@@ -28,8 +28,8 @@
 #+---------------------------------------------------------------------------+
 import os
 import os.path
-import shutil
 import time
+import datetime
 
 #+---------------------------------------------------------------------------+
 #| Local imports
@@ -95,10 +95,6 @@ class AndroidDevice(object):
         if activity is None or len(activity)==0:
             raise Exception("Cannot start an activity that has no name.")
 
-        if not self.__checkADBRecognizeDevice():
-            # self.__restartADBServer() # We cannot do that if we have multiple emulators...
-            raise Exception("ADB didn't find {0}".format(self.name))
-
         self._logger.info("Starting activity {0} on device {1}".format(activity, self.name))
 
         activityPackage = '.'.join(activity.split('.')[:-1])
@@ -115,7 +111,8 @@ class AndroidDevice(object):
             "-n",
             "{0}/.{1}".format(activityPackage, activityName)
         ]
-        OSCommand.executeAsyncCommand(cmd)
+        res = OSCommand.executeCommand(cmd)
+        self._logger.debug("{}".format(res))
 
 
     def checkAPKInstrumenter(self):
@@ -150,10 +147,6 @@ class AndroidDevice(object):
         if packageName is None or len(packageName)==0:
             raise Exception("Package name is null.")
 
-        if not self.__checkADBRecognizeDevice():
-            # self.__restartADBServer() # We cannot do that if we have multiple emulators...
-            raise Exception("ADB didn't find {0}".format(self.name))
-            
         self._logger.info("Starting activity {0}/{1} on device {2}".format(packageName, activityName, self.name))
 
         # $ adb shell am start -n activityPackage/activity
@@ -167,7 +160,10 @@ class AndroidDevice(object):
             "-n",
             "{0}/{1}".format(packageName, activityName)
         ]
-        OSCommand.executeAsyncCommand(cmd)
+        p = OSCommand.executeAsyncCommand(cmd)
+        stdout,stderr = p.communicate()
+        self._logger.debug("{0}".format(stdout))
+
 
     def _restartADBServer(self):
         """
@@ -259,7 +255,6 @@ class AndroidDevice(object):
         time.sleep(5)
         self._logger.debug("Device {0} seems to be ready".format(self.serialNumber))
         self.state = AndroidDevice.STATE_STARTED
-
         
 
     def writeContentOnSdCard(self, filename, fileContent):
@@ -288,10 +283,30 @@ class AndroidDevice(object):
         ]
         OSCommand.executeCommand(cmd)            
             
-        cmd = '{0} -s {1} shell echo "{2}" > {3}'.format(
-            self.mainConfiguration.adbPath, self.serialNumber,fileContent, filePath)
-        
+        cmd = [
+            self.mainConfiguration.adbPath, "-s", self.serialNumber, "shell",
+            "echo", "\"{}\"".format(fileContent), ">", filePath
+        ]
         OSCommand.executeCommand(cmd)
+
+
+    def _pullResults(self):
+        """Pull results of analysis"""
+        self._logger.info("Pulling results of analysis")
+        cmd = [
+            self.mainConfiguration.adbPath,
+            "-s",
+            self.serialNumber,
+            "pull",
+            "/sdcard/hooker/events.logs",
+            "{0}{1}-events.logs".format(self.mainConfiguration.androidTemporaryPath,
+                            datetime.datetime.now().strftime("%Y-%m-%d-%H:%M"))
+        ]
+        p = OSCommand.executeAsyncCommand(cmd)
+        stdout, stderr = p.communicate()
+        self._logger.debug("{0}".format(stdout))
+
+        self._logger.info("Event logs has been pulled in {0}".format(self.mainConfiguration.androidTemporaryPath))
 
 
     def __checkADBRecognizeDevice(self):
@@ -338,9 +353,11 @@ class AndroidDevice(object):
             "6000",
             "--ignore-timeouts"
         ]
-        OSCommand.executeAsyncCommand(cmd)
+        p = OSCommand.executeAsyncCommand(cmd)
+        stdout, stderr = p.communicate()
+        self._logger.debug("{0}".format(stdout))
+
         
-            
     @property
     def name(self):
         """The name of the device

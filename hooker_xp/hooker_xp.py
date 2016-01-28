@@ -30,16 +30,13 @@
 #+---------------------------------------------------------------------------+
 
 from hooker_common import Logger
-
-import logging
-logging.basicConfig(level=logging.ERROR)
 logger = Logger.getLogger(__name__)
+
 import traceback
 
 from hooker_xp.cli.CommandLine import CommandLine
 from hooker_xp.ManualAnalysis import ManualAnalysis
 from hooker_xp.AutomaticAnalysis import AutomaticAnalysis
-
 
 def main():
     """Global entry point"""
@@ -70,8 +67,8 @@ if __name__ == "__main__":
         main()
     except Exception, e:
         tb = traceback.format_exc()
-        logger.debug(tb)
-        raise e
+        logger.error(tb)
+        #raise e
 
 
 

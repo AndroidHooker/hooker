@@ -75,13 +75,6 @@ class Analysis(object):
 
         reporter.createReport(idXp, emulatorName, author, packageName, filename, fileSha1, typeAnalysis, descAnalysis)
 
-    def _reportEvent(self, idXp, sourceEvent, actionEvent, paramsEvent=None):
-        """Insert in the report a new event."""
-        
-        if idXp is None:
-            raise Exception("Cannot create a report if no IdXP is provided.")
-
-        self.reporter.reportEvent(idXp, sourceEvent, actionEvent, paramsEvent)
 
     @staticmethod
     def reportEvent(reporter, idXp, sourceEvent, actionEvent, paramsEvent=None):
@@ -120,27 +113,28 @@ class Analysis(object):
         return idXp
 
         
-    def _createEmulator(self, emulatorNumber, emulatorName):
+    @staticmethod
+    def createEmulator(emulatorNumber, emulatorName, mainConfiguration, analysisType):
         """Creates a new emulator and returns it"""
-        return Analysis.createDevice(emulatorNumber, emulatorName, self.mainConfiguration, None)
+        return Analysis.createDevice(emulatorNumber, emulatorName, mainConfiguration, None, analysisType)
 
         
     @staticmethod
-    def createDevice(adbNumber, name, mainConfiguration, backupDirectory):
+    def createDevice(adbNumber, name, mainConfiguration, backupDirectory, analysisType):
         logger = Logger.getLogger(__name__)
 
         if adbNumber is None or int(adbNumber)<0:
-            raise Exception("Cannot create a device with an invalid adb number, must be >0")
+            raise Exception("Cannot create a device with an invalid adb number, must be > 0")
 
         if name is None or len(name)==0:
             raise Exception("Cannot create a device if no name is provided.")
             
-        logger.debug("Creation of new device named '{0}'.".format(name))
+        logger.debug("Creation of new device: '{0}'.".format(name))
         
         if mainConfiguration.typeOfDevice=='real':
-            return PhysicalDevice(adbNumber, name, mainConfiguration, backupDirectory)
+            return PhysicalDevice(adbNumber, name, mainConfiguration, backupDirectory, analysisType)
         else:
-            return AVDEmulator(adbNumber, name, mainConfiguration)
+            return AVDEmulator(adbNumber, name, mainConfiguration, analysisType)
 
             
     def _writeConfigurationOnEmulator(self, emulator, idXP):
@@ -157,7 +151,7 @@ class Analysis(object):
 [elasticsearch]
 elasticsearch_mode={0}
 elasticsearch_nb_thread={1}
-elasticsearch_ip=10.0.2.2
+elasticsearch_ip={2}
 elasticsearch_port={3}
 elasticsearch_index={4}
 elasticsearch_doctype={5}
@@ -228,3 +222,17 @@ idXP={8}
     @reporter.setter
     def reporter(self, reporter):
         self.__reporter = reporter
+        
+    @property
+    def analysisType(self):
+        return self.__analysisType
+        
+    @analysisType.setter
+    def analysisType(self, analysisType):
+        if analysisType == "manual":
+            self.__analysisType = "manual"
+        elif analysisType == "automatic":
+            self.__analysisType = "automatic"
+        else:
+            raise Exception("Analysis type is either manual or automatic, not {}".format(analysisType))
+            

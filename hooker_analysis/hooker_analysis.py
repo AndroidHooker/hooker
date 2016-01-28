@@ -28,7 +28,6 @@
 #+---------------------------------------------------------------------------+
 #| Standard library imports
 #+---------------------------------------------------------------------------+
-import sys
 import pygeoip
 
 #+---------------------------------------------------------------------------+
@@ -169,7 +168,7 @@ def macroAnalyzeWebview(esInterrogator):
     for xp in eventsPerXP:
         apk = esInterrogator.getAPKInXP(xp)
         logger.warn("{0}: {1} {2} ({3})".format(xp, apk.Name, apk.Market, apk.Filesha1))
-    logger.warn("{0} XP founds.".format(len(xp)))
+    logger.warn("{0} XP founds.".format(len(eventsPerXP)))
 
 
 def macroAnalyzeSocketListening(esInterrogator):
@@ -186,7 +185,7 @@ def macroAnalyzeSocketListening(esInterrogator):
     for xp in eventsPerXP:
         apk = esInterrogator.getAPKInXP(xp)
         logger.warn("{0}: {1} {2} ({3})".format(xp, apk.Name, apk.Market, apk.Filesha1))
-    logger.warn("{0} XP founds.".format(len(xp)))
+    logger.warn("{0} XP founds.".format(len(eventsPerXP)))
 
 def macroAnalyzeGeolocation(esInterrogator):
     logger.warn("Macro Analysis of geolocation requests")
@@ -216,7 +215,7 @@ def macroAnalyzeGeolocation(esInterrogator):
     for xp in eventsPerXP:
         apk = esInterrogator.getAPKInXP(xp)
         logger.warn("{0}: {1} ({2})".format(xp, apk.Name, apk.Filesha1))
-    logger.warn("{0} XP founds.".format(len(xp)))
+    logger.warn("{0} XP founds.".format(len(eventsPerXP)))
 
 
 def macroAnalyzeConnectTo(esInterrogator):

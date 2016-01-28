@@ -6,24 +6,41 @@
 # The last commands are for initiating Build.props to fake a real device.
 #
 
+echo "This script is obsolete. Please use python script HookerInstaller.py. If you really want to use this script, edit it..."
+exit
+
 ADB=$ANDROID_HOME/platform-tools/adb
 BINSU=superUser/system/bin/su
 SETPROP=setpropex
-
-# First we root the emulator using Superuser
 
 if [ ! -f $ADB ]
 then
     echo "Error: adb path is not valid."
     exit
 fi
+if [ ! -f $BINSU ]
+then
+    echo "Error: binsu binary is not valid."
+    exit
+fi
+if [ ! -f $SETPROP ]
+then
+    echo "Error: setprop binary is not valid."
+    exit
+fi
 
-echo "adb has been found."
+echo "Necessary binaries have been found."
+
+# Check if you have the same partition here
+res=`$ADB shell mount | grep /system`
+partition=`echo $res | cut -d " " -f3`
+block=`echo $res | cut -d " " -f1`
+echo "Found /system partition of type: $partition and block: $block"
+
 echo "Installing application Superuser"
 $ADB install superUser/system/app/Superuser.apk
 
-# Check if you have the same partition here
-$ADB shell mount -o rw,remount -t ext4 /dev/block/mtdblock0 /system
+$ADB shell mount -o rw,remount -t $partition $block /system
 
 echo "Pushing /system/xbin/su binary"
 $ADB push $BINSU /system/xbin/su

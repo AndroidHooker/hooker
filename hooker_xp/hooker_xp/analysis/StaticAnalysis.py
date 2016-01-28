@@ -55,7 +55,6 @@ class StaticAnalysis(object):
         Then calls the androguard methods on the built object.
         """
         sys.path.append(self.androguardPath)
-        from androguard.core.bytecodes import dvm
         from androguard.core.bytecodes import apk
 
         self._logger.info("Analyzing {0} with androguard...".format(self.apkToAnalyze))
@@ -94,7 +93,6 @@ class StaticAnalysis(object):
     def __saveResultsInESCluster(self):
         """
         Saves result of the analysis into ES cluster.
-        @todo
         """
         self.reporter.reportStaticEvent(self.idXp, self.apkToAnalyze, self.packageName, self.androidVersionName, self.androidVersionCode, self.minSDKVersion, self.maxSDKVersion, self.mainActivity, self.activities, self.providers, self.libraries, self.services, self.receivers, self.permissions)        
 

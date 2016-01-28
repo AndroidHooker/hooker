@@ -29,11 +29,10 @@
 import os
 import time
 import random
-import hashlib
 import shutil
 import traceback
 
-from multiprocessing import Pool, Manager, Queue
+from multiprocessing import Pool, Manager, TimeoutError
 
 #+---------------------------------------------------------------------------+
 #| Local imports
@@ -45,8 +44,6 @@ from hooker_xp.report.Reporter import Reporter
 from hooker_xp.report.ReportingConfiguration import ReportingConfiguration
 from hooker_xp.analysis.MainConfiguration import MainConfiguration
 from hooker_xp.analysis.StaticAnalysis import StaticAnalysis
-from hooker_xp.device.AVDEmulator import AVDEmulator
-from hooker_xp.device.PhysicalDevice import PhysicalDevice
 from hooker_xp.device.TelnetEmulation import TelnetEmulation
 
 def executeExperiment(args):
@@ -64,7 +61,7 @@ def executeExperiment(args):
     # Default has to be >1
     SLEEP_FACTOR=1
     if mainConfiguration.typeOfDevice == 'emulated':
-        SLEEP_FACTOR = 10
+        SLEEP_FACTOR = 5
     if SLEEP_FACTOR < 1:
         raise Exception("SLEEP_FACTOR variable cannot be less than 1.")
 
@@ -85,7 +82,7 @@ def executeExperiment(args):
 
             # Create a new report for this analysis
             logger.debug("Create report.")
-            Analysis.createReport(reporter, idXp, emulatorName, "unknown", apkToAnalyze, "automatic", None) 
+            Analysis.createReport(reporter, idXp, emulatorName, "unknown", apkToAnalyze, "automatic", mainConfiguration.name) 
         
             # Execute static analysis
             logger.debug("Executing the Static Analysis")
@@ -94,28 +91,31 @@ def executeExperiment(args):
             logger.info(staticAnalysis)
 
             # Create the emulator
-            device = Analysis.createDevice(iEmulator, emulatorName, mainConfiguration, analysisConfiguration.backupDirectory)
+            if mainConfiguration.typeOfDevice=='emulated':
+                device = Analysis.createEmulator(iEmulator, emulatorName, mainConfiguration, analysisType="automatic")
+            else:
+                device = Analysis.createDevice(iEmulator, mainConfiguration.deviceId, mainConfiguration, analysisConfiguration.backupDirectory, analysisType="automatic")
             
             if device is None:
                 raise Exception("Something has prevented the creation of an device.")
 
             # Starts the device
-            Analysis.reportEvent(reporter, idXp, "Emulator", "start")
+            Analysis.reportEvent(reporter, idXp, emulatorName, "Start device")
             device.start()
 
             # Install et execute preparation applications
             if mainConfiguration.typeOfDevice=='emulated':
                 for prepareAPK in analysisConfiguration.prepareAPKs:
-                    Analysis.reportEvent(reporter, idXp, "Emulator", "installAPK", prepareAPK)
+                    Analysis.reportEvent(reporter, idXp, emulatorName, "Install preparation APK", prepareAPK)
                     device.installAPK(prepareAPK)
 
                 # Execute preparation applications
                 for prepareAPK in analysisConfiguration.prepareAPKs:
-                    Analysis.reportEvent(reporter, idXp, "Emulator", "startActivity", os.path.basename(prepareAPK)[:-4])
+                    Analysis.reportEvent(reporter, idXp, emulatorName, "Start activity", os.path.basename(prepareAPK)[:-4])
                     device.startActivity(os.path.basename(prepareAPK)[:-4])
 
             # Writes the experiment configuration on the device
-            Analysis.reportEvent(reporter, idXp, "Emulator", "writeConfiguration")
+            Analysis.reportEvent(reporter, idXp, emulatorName, "Write configuration file")
             Analysis.writeConfigurationOnEmulator(device, idXp, reportingConfiguration)
 
             if mainConfiguration.typeOfDevice=='emulated':
@@ -124,42 +124,46 @@ def executeExperiment(args):
                 time.sleep(sleepDuration)
 
             # Install the targeted application
-            Analysis.reportEvent(reporter, idXp, "Emulator", "installAPK", apkToAnalyze)
+            Analysis.reportEvent(reporter, idXp, emulatorName, "Install target APK", apkToAnalyze)
             device.installAPK(apkToAnalyze)
             time.sleep(5*SLEEP_FACTOR/5)
 
             # We then follow the scenario user has filled in configuration
             for order in analysisConfiguration.scenario:
                 if "execute" == order:
-                    Analysis.reportEvent(reporter, idXp, "Emulator", "Launching main activity", staticAnalysis.mainActivity)
+                    Analysis.reportEvent(reporter, idXp, emulatorName, "Launching main activity", staticAnalysis.mainActivity)
                     logger.info("Starting main activity: {0}".format(staticAnalysis.mainActivity))
                     device.startActivityFromPackage(staticAnalysis.packageName, staticAnalysis.mainActivity)
                     time.sleep(5*SLEEP_FACTOR)
                 elif "stimulate" == order:
-                    Analysis.reportEvent(reporter, idXp, "Emulator", "Stimulating package with monkey", staticAnalysis.packageName)
+                    Analysis.reportEvent(reporter, idXp, emulatorName, "Stimulating package with monkey", staticAnalysis.packageName)
                     logger.info("Stimulating with monkey: {0}".format(staticAnalysis.packageName))
                     device.stimulateWithMonkey(staticAnalysis.packageName)
                     time.sleep(10*SLEEP_FACTOR)
                 elif "externalStimulation" == order:
-                    Analysis.reportEvent(reporter, idXp, "Emulator", "Stimulating phone with external conditions")
+                    Analysis.reportEvent(reporter, idXp, emulatorName, "Stimulating phone with external conditions")
                     logger.info("Stimulating phone with external conditions...")
                     externalStimulation = TelnetEmulation(reporter, idXp, device)
                     externalStimulation.start()
                     time.sleep(10*SLEEP_FACTOR)
                 elif "reboot" == order:
-                    Analysis.reportEvent(reporter, idXp, "Emulator", "Rebooting device")
+                    Analysis.reportEvent(reporter, idXp, emulatorName, "Rebooting device")
                     logger.info("Rebooting device.")
                     device.reboot()
                     time.sleep(5*SLEEP_FACTOR)
 
-            Analysis.reportEvent(reporter, idXp, "Emulator", "Finished analysis", apkToAnalyze)
+            Analysis.reportEvent(reporter, idXp, emulatorName, "Analysis has finished", apkToAnalyze)
             
             logger.info("Analysis of APK {0} has been finished.")
-            Analysis.reportEvent(reporter, idXp, "Emulator", "closed")
+            Analysis.reportEvent(reporter, idXp, emulatorName, "Emulator closed")
             device.stop()
 
         except KeyboardInterrupt:
-            pass
+            logger.debug("Keyboard interrupt caught\n")
+            # Try to stop device if necessary
+            if device is not None:
+                device.stop()
+            break
         except Exception, e:
             logger.error("Exception while executing an experiment : {0}".format(e))
             tb = traceback.format_exc()
@@ -167,8 +171,11 @@ def executeExperiment(args):
             try:
                 device.stop()
             except Exception:
-                logger.error("Cannot stop the AVD.")
+                logger.error("Cannot stop the AVD, quitting experience.")
+                break
 
+    return True
+    
 
 class AutomaticAnalysis(Analysis):
     """
@@ -181,7 +188,8 @@ class AutomaticAnalysis(Analysis):
         self.analysisConfiguration = self.__prepareAnalysis(commandLineParser)
 
     def test(self):
-        device = Analysis.createDevice(0, self.mainConfiguration.deviceId, self.mainConfiguration, self.analysisConfiguration.backupDirectory)
+        device = Analysis.createDevice(0, self.mainConfiguration.deviceId, self.mainConfiguration, 
+                                        self.analysisConfiguration.backupDirectory, analysisType="automatic")
         if device is None:
             raise Exception("Something has prevented the instanciation of the device.")
 
@@ -208,14 +216,18 @@ class AutomaticAnalysis(Analysis):
         #self.test()
  
         if self.mainConfiguration.typeOfDevice=='emulated':
-            # first step is to create the templates for all our emulators
-            self._logger.debug("Create {0} templates, one for each emulator".format(self.analysisConfiguration.maxNumberOfEmulators))
-            AVDEmulator.createTemplates(self.mainConfiguration, self.analysisConfiguration)
+            # first step is to create templates if we have lots of emulators
+            # We create one template for 4 devices
+            # Attention: this has been commented in version 0.2 since it does not work properly.
+            # You however may have to reimplement this if you want to run Hooker with a lot of AVD.
+            #nb_templates = int(self.analysisConfiguration.maxNumberOfEmulators / 4)
+            #for i in xrange(nb_templates):
+            #    self._logger.debug("Create {} templates, one for each emulator".format(nb_templates))
+            #    AVDEmulator.createTemplates(self.mainConfiguration, nb_templates)
        
             # Create a queue of threads
             distributedQueueManager = Manager()
             listOfAPKs = distributedQueueManager.Queue()
-            pool = Pool(processes=self.analysisConfiguration.maxNumberOfEmulators)
 
         # If we have a real device in automatic mode, we have to push backup to sdcard, and push TWRP script to /cache/recovery/
         # at each experiment. This is done in AVD logic.
@@ -224,28 +236,38 @@ class AutomaticAnalysis(Analysis):
             distributedQueueManager = Manager()
             listOfAPKs = distributedQueueManager.Queue()
             self.analysisConfiguration.maxNumberOfEmulators = 1
-            pool = Pool(processes=self.analysisConfiguration.maxNumberOfEmulators)
+            
+        pool = Pool(processes=self.analysisConfiguration.maxNumberOfEmulators)
 
         # Tell threads to analyze APKs which are push to the queue
         workerArgs = [(listOfAPKs, iEmulator, self.mainConfiguration, self.analysisConfiguration, self.reportingConfiguration) for iEmulator in range(self.analysisConfiguration.maxNumberOfEmulators)]
-        self._logger.debug(workerArgs)
 
         try:
-            pool.map_async(executeExperiment, workerArgs)
-            
+            r = pool.map_async(executeExperiment, workerArgs)
             # Continuously scan the directory and add identified APKs to ensure at least next emulators round is ready
             while True:
                 if listOfAPKs.qsize() > self.analysisConfiguration.maxNumberOfEmulators*2:
-                    time.sleep(5)
-                    continue
+                    #self._logger.debug("List of APK is superior to number of emulators")
+                    #time.sleep(5)
+                    try:
+                        if r.get(5):
+                            self._logger.info("Threads have returned, quitting")
+                            break
+                    except TimeoutError:
+                        continue
                 
                 for directory in self.analysisConfiguration.apkFiles:
-                    #self._logger.info("Analyzing directory: {0}".format(directory))
                     filenames = os.listdir(directory)
 
                     if len(filenames) == 0:
                         self._logger.debug("All APKs have been pushed to the analyzing queue, sleeping 5 secs...")
-                        time.sleep(5)
+                        #time.sleep(5)
+                        try:
+                            if r.get(5):
+                                self._logger.info("Threads have returned, quitting")
+                                break
+                        except TimeoutError:
+                            continue
                     else:
                         apkFileName = random.choice(filenames)
                         apkFileInputPath = os.path.join(directory, apkFileName)
@@ -254,8 +276,8 @@ class AutomaticAnalysis(Analysis):
                             self._logger.error("You don't have read access to file {0}, not pushing file to queue.".format(apkFileInputPath))
                             continue
 
-                        # compute Sha1 on name the file with it
-                        sha1=self._computeSha1(apkFileInputPath)
+                        # compute Sha1 and name the file with it
+                        sha1 = self._computeSha1(apkFileInputPath)
                         apkFileOutputPath = os.path.join(self.analysisConfiguration.outputDirectory, sha1+".apk")
 
                         # move APK to output dir
@@ -263,8 +285,10 @@ class AutomaticAnalysis(Analysis):
                         self._logger.info("Pushing APK {0} in queue.".format(apkFileOutputPath))
                         listOfAPKs.put(apkFileOutputPath)
         except KeyboardInterrupt:
-            self._logger.error("Automatic analysis interrupted by a keyboard Exception.")
-    
+            self._logger.error("Automatic analysis interrupted by a keyboard Exception.\n")
+        except Exception, e:
+            self._logger.error(e)
+            
     def __prepareAnalysis(self, commandLineParser):
         """Configures the class attributed through
         parameters stored in the command line parser.
@@ -290,10 +314,7 @@ class AutomaticAnalysis(Analysis):
 
         if len(apkFiles)==0:
             raise Exception("At least one directory must be provided in the 'apks' configuration parameter.")
-                
-        analysisName = None
-        if 'name' in analysisOptions.keys():
-            analysisName = analysisOptions['name']
+            
 
         maxNumberOfEmulators = 1
         if 'maxnumberofemulators' in analysisOptions.keys():
@@ -342,7 +363,8 @@ class AutomaticAnalysis(Analysis):
                 raise Exception("You don't have read access to directory {0}.".format(backupDirectory))
 
         self._logger.debug("Configure the automatic analysis.")
-        analysis = AutomaticAnalysisConfiguration(apkFiles, prepareAPKs, scenario, outputDirectory, name=analysisName, maxNumberOfEmulators=maxNumberOfEmulators, backupDirectory=backupDirectory)
+        analysis = AutomaticAnalysisConfiguration(apkFiles, prepareAPKs, scenario, outputDirectory, 
+                    maxNumberOfEmulators=maxNumberOfEmulators, backupDirectory=backupDirectory)
 
         return analysis
 

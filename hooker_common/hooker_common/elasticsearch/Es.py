@@ -43,6 +43,7 @@ class Es(object):
     # Name of the hooker index in the Es cluster
     ES_INDEX_NAME_HOOKER = "hooker_test"
     ES_DOCTYPE_EXPERIMENT_HOOKER = "experiment"
+    ES_DOCTYPE_PYTHON_HOOKER = "python"
     ES_DOCTYPE_STATIC_HOOKER = "static"
     ES_DOCTYPE_EVENT_HOOKER = "event"
     ES_DOCTYPE_APK_HOOKER = "apk"    
@@ -55,6 +56,7 @@ class Es(object):
         self._logger = Logger.getLogger(__name__)
         self.esNodes = esNodes
         self.__initializeConnection()
+        
 
     def insertNewExperiment(self, idXp, emulator, author, packageName, filename, filesha1, analysis, description=None):
         """Inserts in ES Cluster the new specified experiment."""
@@ -83,18 +85,19 @@ class Es(object):
         if self.isExperimentExists(idXp):
             raise Exception("Experiment with ID '{0}' already exists, cannot duplicate it.".format(idXp))
 
-        currentDate = str(int(round(time.time() * 1000)))
+        currentDate = int(round(time.time() * 1000))
         
         createBody = {
-            "IDXP":idXp,
-            "PackageName":packageName,        
-            "Analyzed":False,
-            "Filename":filename,
-            "Filesha1":filesha1,
-            "Timestamp":currentDate,
-            "Emulator":emulator,
-            "Author":author,
-            "Description":description
+            "IDXP": idXp,
+            "PackageName": packageName,        
+            "Analyzed": False,
+            "Filename": filename,
+            "Filesha1": filesha1,
+            "Timestamp": currentDate,
+            "RelativeTimestamp": 0,
+            "Emulator": emulator,
+            "Author": author,
+            "Description": description
         }
             
         result = self.esInstance.create(index=Es.ES_INDEX_NAME_HOOKER, doc_type=Es.ES_DOCTYPE_EXPERIMENT_HOOKER, body=createBody)
@@ -108,6 +111,46 @@ class Es(object):
                 raise Exception("The ES cluster did not accept the creation of this experiment.")
 
         self._logger.debug("The experiment '{0}' has successfuly been inserted into ES cluster.".format(idXp))
+        
+        
+    def insertExperimentSteps(self, idXp, relTime, emulator, description):
+        """Inserts in ES Cluster the new specified experiment."""
+
+        if idXp is None or len(idXp) == 0:
+            raise Exception("IdXp cannot be null")
+        if emulator is None or len(emulator) == 0:
+            raise Exception("Emulator cannot be null.")
+        if description is None or len(description) == 0:
+            raise Exception("Description cannot be null.")
+            
+        if self.esInstance is None:
+            raise Exception("Cannot insert new experiment since no ES cluster available.")
+
+        # checks if the experiment exists
+        if not self.isExperimentExists(idXp):
+            raise Exception("Experiment with ID '{0}' doesn't exists, create it before inserting a static event.".format(idXp))
+            
+        currentDate = int(round(time.time() * 1000))
+        
+        createBody = {
+            "Timestamp": currentDate,
+            "RelativeTimestamp": relTime,
+            "Emulator": emulator,
+            "Description": description
+        }
+            
+        result = self.esInstance.create(index=Es.ES_INDEX_NAME_HOOKER, doc_type=Es.ES_DOCTYPE_PYTHON_HOOKER, body=createBody, parent=idXp)
+        if result is None:
+            raise Exception("The ES cluster did not accept our data.")                    
+        elif "created" in result.keys():
+            if not result["created"]:
+                raise Exception("The ES cluster did not accept the creation of this experiment.")
+        elif "ok" in result.keys():
+            if not result["ok"]:
+                raise Exception("The ES cluster did not accept the creation of this experiment.")
+
+        self._logger.debug("The experiment '{0}' has successfuly been inserted into ES cluster.".format(idXp))
+        
 
     def insertStaticInformationOnAPK(self, idXp, filename, filesha1, packageName, androidVersionCode, androidVersionName, minSDKVersion, maxSDKVersion, mainActivity, activities, providers, libraries, services, receivers, permissions):
         """Inserts into the current ES cluster, the provided static information about an APK"""
@@ -128,7 +171,7 @@ class Es(object):
         if not self.isExperimentExists(idXp):
             raise Exception("Experiment with ID '{0}' doesn't exists, create it before inserting a static event.".format(idXp))
 
-        currentDate = str(int(round(time.time() * 1000)))
+        currentDate = int(round(time.time() * 1000))
 
         createBody = {
             "Timestamp": currentDate,
@@ -146,7 +189,7 @@ class Es(object):
             "Services": services,
             "Receivers": services,
             "Permissions": permissions
-            }
+        }
 
         result = self.esInstance.create(index=Es.ES_INDEX_NAME_HOOKER, doc_type=Es.ES_DOCTYPE_STATIC_HOOKER, body=createBody, parent=idXp)
         if result is None:
@@ -177,7 +220,7 @@ class Es(object):
         if not self.isExperimentExists(idXp):
             raise Exception("Experiment with ID '{0}' doesn't exists, create it before inserting an event.".format(idXp))
 
-        currentDate = str(int(round(time.time() * 1000)))
+        currentDate = int(round(time.time() * 1000))
 
         createBody = {
             "Timestamp": currentDate,
@@ -222,7 +265,7 @@ class Es(object):
         if not self.isExperimentExists(idXp):
             raise Exception("Experiment with ID '{0}' doesn't exists, create it before inserting a static event.".format(idXp))
 
-        currentDate = str(int(round(time.time() * 1000)))
+        currentDate = int(round(time.time() * 1000))
 
         json_activities = []
         for activity in activities:
@@ -286,7 +329,7 @@ class Es(object):
         if self.esInstance is None:
             raise Exception("Cannot insert new APK since no ES cluster available.")
 
-        currentDate = str(int(round(time.time() * 1000)))
+        currentDate = int(round(time.time() * 1000))
         
         createBody = {
             "IDAPK": apk.APKID,            
@@ -406,16 +449,32 @@ class Es(object):
                         "path": "Timestamp"
                     },
                     "properties": {
-                        "IDXP": {"type": "string"},       
+                        "IDXP": {"type": "string", "index": "not_analyzed"},
                         "Emulator": {"type": "string", "index": "not_analyzed"},
                         "Author": {"type": "string", "index": "not_analyzed"},
-                        "Analyzed": {"type": "boolean"},
+                        "Analyzed": {"type": "boolean", "index": "not_analyzed"},
                         "Timestamp": {"type": "date"},
-                        "PackageName": {"type": "string"},
-                        "Description": {"type": "string"},
+                        "RelativeTimestamp": {"type": "long"},
+                        "PackageName": {"type": "string", "index": "not_analyzed"},
+                        "Description": {"type": "string", "index": "not_analyzed"},
                         "Filename": {"type": "string"},
-                        "Filesha1": {"type": "string"},
+                        "Filesha1": {"type": "string", "index": "not_analyzed"},
                         "Analysis": {"type": "string"}
+                    }
+                },
+                Es.ES_DOCTYPE_PYTHON_HOOKER: {
+                    "_parent": {
+                        "type": "experiment"
+                    },
+                    "_timestamp": {
+                        "enabled": "true",
+                        "path": "Timestamp"
+                    },
+                    "properties": {
+                        "Emulator": {"type": "string", "index": "not_analyzed"},
+                        "Timestamp": {"type": "date"},
+                        "RelativeTimestamp": {"type": "long"},
+                        "Description": {"type": "string", "index": "not_analyzed"}
                     }
                 },
                 Es.ES_DOCTYPE_APK_HOOKER: {

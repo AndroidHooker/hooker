@@ -31,22 +31,46 @@
 # [2] install python package hooker_xp
 # [3] compile the APK-instrumenter application using ant
 
-# [1]
-cd hooker_common
-python setup.py install
-
-# [2]
-cd ../hooker_xp
-python setup.py install
-
-# [3]
 if [ -z "$ANDROID_HOME" ]
 then
     echo "Error: you have to set your ANDROID_HOME environment variable"    
+    exit
 else
-    cd ../APK-instrumenter
-    ant debug
-
-    cd ../tools/APK-contactGenerator/
-    ant debug
+    echo "ANDROID_HOME variable is set to $ANDROID_HOME" 
 fi
+
+# [1] Try to compile Android apps
+echo "Compiling APK-instrumenter apk"
+cd APK-instrumenter
+ant debug
+
+echo "Compiling APK-contactGenerator apk"
+cd ../tools/APK-contactGenerator/
+ant debug
+
+# [2] Install python modules
+echo "Installing hooker_common"
+cd ../../hooker_common
+python setup.py install
+
+# [3] Install hooker_xp
+echo "Installing hooker_xp"
+cd ../hooker_xp
+python setup.py install
+
+# Check everything went fine
+cd ..
+if [ -z APK-instrumenter/bin/ApkInstrumenterActivity-debug.apk ]
+then
+    echo "Error: APK-instrumenter apk has not correctly been built"
+elif [ -z tools/APK-contactGenerator/bin/ImportContacts-debug.apk ]
+then
+    echo "Error: ImportContacts-debug.apk has not correctlu been built"
+elif [ -z /usr/local/lib/python2.7/dist-packages/hooker_xp* ]
+then
+    echo "Error: Cannot found hooker_xp in /usr/local/lib/python2.7/dist-packages/, check that module has been correctly installed"
+elif [ -z /usr/local/lib/python2.7/dist-packages/hooker_common* ]
+then
+    echo "Error: Cannot found hooker_xp in /usr/local/lib/python2.7/dist-packages/, check that module has been correctly installed"
+fi
+

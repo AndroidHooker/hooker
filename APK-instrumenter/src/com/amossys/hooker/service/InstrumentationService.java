@@ -155,7 +155,15 @@ public class InstrumentationService extends Service {
             createReportersFromConfigFile();
           }
           if (eventReporters.size() == 0) {
-            localCacheOfEvents.add(event);
+            // If no reporter are declared for a long time, localCacheOfEvents will become to big
+            // In such a case, since we don't know how long it will take, we clear the cache...
+            // This means we'll lose all events in queue, but we have to do sth.
+            if(localCacheOfEvents.size() > 10000 ) {
+              localCacheOfEvents.clear();
+            }
+            else {
+              localCacheOfEvents.add(event);
+            }
           } else {
             while (localCacheOfEvents.size() > 0) {
               SubstrateMain.log("Collecting service emptying its local cache");

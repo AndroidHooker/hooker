@@ -1,0 +1,155 @@
+[
+  {
+    "_id": "Hooker-dashboard",
+    "_type": "dashboard",
+    "_source": {
+      "title": "Hooker dashboard",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"col\":1,\"id\":\"Total-events\",\"row\":3,\"size_x\":5,\"size_y\":2,\"type\":\"visualization\"},{\"col\":6,\"id\":\"Hooker-names\",\"row\":1,\"size_x\":7,\"size_y\":4,\"type\":\"visualization\"},{\"col\":1,\"id\":\"Class-names\",\"row\":9,\"size_x\":6,\"size_y\":5,\"type\":\"visualization\"},{\"col\":7,\"id\":\"Method-names\",\"row\":9,\"size_x\":6,\"size_y\":5,\"type\":\"visualization\"},{\"col\":1,\"columns\":[\"HookerName\",\"ClassName\",\"MethodName\",\"Parameters\",\"Return.ReturnValue\"],\"id\":\"Class-Method-Param-Return\",\"row\":14,\"size_x\":12,\"size_y\":7,\"sort\":[\"Timestamp\",\"asc\"],\"type\":\"search\"},{\"col\":1,\"id\":\"Analyses'-descriptions\",\"row\":1,\"size_x\":5,\"size_y\":2,\"type\":\"visualization\"},{\"id\":\"Static-results\",\"type\":\"search\",\"size_x\":12,\"size_y\":4,\"col\":1,\"row\":5,\"columns\":[\"PackageName\",\"Android Version Code\",\"Main Activity\",\"Activities\",\"Permissions\",\"Providers\",\"Receivers\",\"Services\",\"Libraries\"],\"sort\":[\"Timestamp\",\"desc\"]}]",
+      "version": 1,
+      "timeRestore": false,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}}}]}"
+      }
+    }
+  },
+  {
+    "_id": "Class-Method-Param-Return",
+    "_type": "search",
+    "_source": {
+      "title": "Class - Method - Param - Return",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "HookerName",
+        "ClassName",
+        "MethodName",
+        "Parameters",
+        "Return.ReturnValue"
+      ],
+      "sort": [
+        "Timestamp",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"*\"}},\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "XP-description",
+    "_type": "search",
+    "_source": {
+      "title": "XP description",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "Description"
+      ],
+      "sort": [
+        "Timestamp",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"_type: \\\"experiment\\\"\"}},\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Static-results",
+    "_type": "search",
+    "_source": {
+      "title": "Static results",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "PackageName",
+        "Android Version Code",
+        "Main Activity",
+        "Activities",
+        "Permissions",
+        "Providers",
+        "Receivers",
+        "Services",
+        "Libraries"
+      ],
+      "sort": [
+        "Timestamp",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"analyze_wildcard\":true,\"query\":\"_type: \\\"static\\\"\"}},\"highlight\":{\"pre_tags\":[\"@kibana-highlighted-field@\"],\"post_tags\":[\"@/kibana-highlighted-field@\"],\"fields\":{\"*\":{}},\"fragment_size\":2147483647},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Method-names",
+    "_type": "visualization",
+    "_source": {
+      "title": "Method names",
+      "visState": "{\"type\":\"histogram\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"scale\":\"linear\",\"mode\":\"stacked\",\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"MethodName\",\"size\":20,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Class-names",
+    "_type": "visualization",
+    "_source": {
+      "title": "Class names",
+      "visState": "{\"type\":\"histogram\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"scale\":\"linear\",\"mode\":\"stacked\",\"times\":[],\"addTimeMarker\":false,\"defaultYExtents\":false,\"setYExtents\":false,\"yAxis\":{}},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"ClassName\",\"size\":20,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Analyses'-descriptions",
+    "_type": "visualization",
+    "_source": {
+      "title": "Analyses' descriptions",
+      "visState": "{\"type\":\"table\",\"params\":{\"perPage\":10,\"showMeticsAtAllLevels\":false,\"showPartialRows\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"bucket\",\"params\":{\"field\":\"Description\",\"size\":10,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+      "description": "",
+      "savedSearchId": "XP-description",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Hooker-names",
+    "_type": "visualization",
+    "_source": {
+      "title": "Hooker names",
+      "visState": "{\"type\":\"pie\",\"params\":{\"shareYAxis\":true,\"addTooltip\":true,\"addLegend\":true,\"isDonut\":false},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}},{\"id\":\"2\",\"type\":\"terms\",\"schema\":\"segment\",\"params\":{\"field\":\"HookerName\",\"size\":20,\"order\":\"desc\",\"orderBy\":\"1\"}}],\"listeners\":{}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+      }
+    }
+  },
+  {
+    "_id": "Total-events",
+    "_type": "visualization",
+    "_source": {
+      "title": "Total events",
+      "visState": "{\"type\":\"metric\",\"params\":{\"fontSize\":60},\"aggs\":[{\"id\":\"1\",\"type\":\"count\",\"schema\":\"metric\",\"params\":{}}],\"listeners\":{}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"hooker_test\",\"query\":{\"query_string\":{\"query\":\"*\",\"analyze_wildcard\":true}},\"filter\":[]}"
+      }
+    }
+  }
+]

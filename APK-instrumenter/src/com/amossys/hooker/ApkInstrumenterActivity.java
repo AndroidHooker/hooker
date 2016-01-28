@@ -102,9 +102,9 @@ public class ApkInstrumenterActivity extends Activity {
 				filename.setText(configuration.getString("fileName"));
 				
 				if (checkIfServiceIsRunning()) {
-//					serviceStarted.setText("ON");
+					serviceStarted.setText("ON");
 				} else {
-//					serviceStarted.setText("OFF");
+					serviceStarted.setText("OFF");
 				}
 				
 				break;
@@ -152,7 +152,7 @@ public class ApkInstrumenterActivity extends Activity {
 		context = getApplicationContext();
 
 		// Init attributes
-//		serviceStarted = (TextView) findViewById(R.id.serviceStatus);
+		serviceStarted = (TextView) findViewById(R.id.serviceStatus);
 		idXp = (TextView) findViewById(R.id.idExperiment);
 		esState = (TextView) findViewById(R.id.esStatus);
 		esIP = (EditText) findViewById(R.id.esIP);
@@ -176,11 +176,11 @@ public class ApkInstrumenterActivity extends Activity {
 		filemode.setKeyListener(null);
 		
 		doBindService();
-//		if (checkIfServiceIsRunning()) {
-//			serviceStarted.setText("ON");
-//		} else {
-//			serviceStarted.setText("OFF");
-//		}
+		if (checkIfServiceIsRunning()) {
+			serviceStarted.setText("ON");
+		} else {
+			serviceStarted.setText("OFF");
+		}
 	}
 
 	private boolean checkIfServiceIsRunning() {
@@ -189,7 +189,7 @@ public class ApkInstrumenterActivity extends Activity {
 		ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
 			if (InstrumentationService.class.getName().equals(service.service.getClassName())) {
-//				serviceStarted.setText("OFF");
+				serviceStarted.setText("OFF");
 				return true;
 			}
 		}

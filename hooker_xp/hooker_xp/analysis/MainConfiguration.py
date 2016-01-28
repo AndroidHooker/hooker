@@ -38,25 +38,18 @@ class MainConfiguration(object):
     """A container that stores all the parameters required to start an analysis
     """
 
-    def __init__(self, referenceAVD, androidSDKPath, androidTemporaryPath, androguardPath, typeOfDevice, deviceId):
+    def __init__(self, referenceAVD, androidSDKPath, androidTemporaryPath, androguardPath, typeOfDevice, deviceId, name):
         self.androidSDKPath = androidSDKPath
         self.androidTemporaryPath = androidTemporaryPath
 
-        # Make the assumption that if platform is 64 bit, we have emulator64
-        if '64bit' == (platform.architecture()[0]):
-            if not os.path.exists(os.path.join(androidSDKPath, "tools/emulator64-arm")):
-                raise Exception("File {0} doesn't exist".format(os.path.join(androidSDKPath, "tools/emulator64-arm")))
-            self.emulatorPath = os.path.join(androidSDKPath, "tools/emulator64-arm")
-        elif '32bit' == (platform.architecture()[0]):
-            if not os.path.exists(os.path.join(androidSDKPath, "tools/emulator-arm")):
-                raise Exception("File {0} doesn't exist".format(os.path.join(androidSDKPath, "tools/emulator-arm")))
-            self.emulatorPath = os.path.join(androidSDKPath, "tools/emulator-arm")
-        else:
-            raise Exception("Platform architecture is not recognized: {0}".format(platform.architecture()[0]))
-        
+        if not os.path.exists(os.path.join(androidSDKPath, "tools/emulator")):
+            raise Exception("File {0} doesn't exist".format(os.path.join(androidSDKPath, "tools/emulator")))
+                        
+        self.emulatorPath = os.path.join(androidSDKPath, "tools/emulator")
         self.adbPath = os.path.join(androidSDKPath, "platform-tools/adb")
         self.androguardPath = androguardPath
         self.typeOfDevice = typeOfDevice
+        self.name = name
         # Differentiate real and emulated configurations
         if self.typeOfDevice=='real':
             self.deviceId=deviceId
@@ -76,10 +69,12 @@ class MainConfiguration(object):
 
         mainOptions = commandLineParser.mainOptions
 
-        if 'device' in mainOptions.keys():
-            typeOfDevice = mainOptions['device']
-            if not (typeOfDevice=='real' or typeOfDevice=='emulated'):
-                raise Exception("Type of device must be \"real\" or \"emulated\"")
+        if not 'device' in mainOptions.keys():
+            raise Exception("The device configuration entry is missing.")
+            
+        typeOfDevice = mainOptions['device']
+        if not (typeOfDevice=='real' or typeOfDevice=='emulated'):
+            raise Exception("Type of device must be \"real\" or \"emulated\"")
 
         deviceId=None
         if typeOfDevice=='real':
@@ -98,6 +93,10 @@ class MainConfiguration(object):
                 raise Exception("You don't have read access to directory {0}.".format(refAvdDirectory))
             refAVD = mainOptions['referenceavd']
 
+        if not 'name' in mainOptions.keys():
+            raise Exception("The name configuration entry is missing.")
+        xpName = mainOptions['name']
+            
         if not 'androidsdkpath' in mainOptions.keys():
             raise Exception("The androidSDKPath configuration entry is missing.")
         androidSDKPath = mainOptions['androidsdkpath']
@@ -122,12 +121,12 @@ class MainConfiguration(object):
         if not os.access(androguardPath, os.R_OK):
             raise Exception("You don't have read access to directory {0}.".format(androguardPath))
 
-        return MainConfiguration(refAVD, androidSDKPath, androidTemporaryPath, androguardPath, typeOfDevice, deviceId)
+        return MainConfiguration(refAVD, androidSDKPath, androidTemporaryPath, androguardPath, typeOfDevice, deviceId, xpName)
 
     def __str__(self):
         """toString method"""
         lines = [
-            "Main Conf:",
+            "Main Conf of experiment \"{}\":".format(self.name),
             "\t- SDK\t\t\t{0}".format(self.androidSDKPath),            
             "\t- Ref. AVD\t\t{0}".format(self.referenceAVD),
             "\t- Androguard\t\t{0}".format(self.androguardPath),
@@ -148,6 +147,16 @@ class MainConfiguration(object):
             
         self.__referenceAVD = referenceAVD
         
+    @property
+    def name(self):
+        return self.__name
+    
+    @name.setter
+    def name(self, name):
+        if name is None:
+            raise Exception("The name of XP cannot be null.")
+        self.__name = name
+    
     @property
     def androidSDKPath(self):
         """Path to the android SDK
@@ -236,6 +245,6 @@ class MainConfiguration(object):
 
     @deviceId.setter
     def deviceId(self, deviceId):
-        if deviceId is None and typeOfDevice=='real':
+        if deviceId is None and self.__typeOfDevice=='real':
                 raise Exception("DeviceId cannot be null.")
         self.__deviceId = deviceId

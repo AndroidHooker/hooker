@@ -26,29 +26,17 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="5dp"
-                android:text="Log events"
+                android:text="Instrumentation Service"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
-<!--             <TextView
+            <TextView
                 android:id="@+id/serviceStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
                 android:layout_marginRight="5dp"
-                android:text="" /> -->
-
-            <Switch
-                android:id="@+id/switch1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:layout_marginRight="5dp"
-                android:layout_toRightOf="@+id/textView1"
-                android:switchMinWidth="30dp"
                 android:text="" />
-
         </RelativeLayout>
 
         <RelativeLayout

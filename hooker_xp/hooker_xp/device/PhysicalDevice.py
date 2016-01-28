@@ -28,7 +28,6 @@
 #+---------------------------------------------------------------------------+
 import os
 import os.path
-import shutil
 import time
 import datetime
 
@@ -43,13 +42,15 @@ class PhysicalDevice(AndroidDevice):
     """
     Manage an Android physical device
     """
-    def __init__(self, adbPort, name, mainConfiguration, backupDirectory):
+    def __init__(self, adbPort, name, mainConfiguration, backupDirectory, analysisType):
         super(PhysicalDevice, self).__init__(adbPort, name, mainConfiguration)
         self.__backupDir = backupDirectory
+        self._logger = Logger.getLogger(__name__)
         
         # Check if backup directory contains 2 folders named sdcard and partitions
         self.__checkBackupDirectories()
         self.serialNumber = name
+        self.analysisType = analysisType
         self.checkAPKInstrumenter()
         # Put the state directly in started, since there is no FS preparation for real device
         self.state = AndroidDevice.STATE_STARTED
@@ -128,28 +129,13 @@ class PhysicalDevice(AndroidDevice):
             self.serialNumber,
             "reboot"
         ]
-        OSCommand.executeAsyncCommand(cmd)
+        self._logger.debug(OSCommand.executeCommand(cmd))
+
         # Real device can take time to reboot
         time.sleep(15)
         # waits for device to be ready
         self._waitForDeviceToBeReady()
-        self.state = AndroidDevice.STATE_STARTING            
-
-
-    def __pullResults(self):
-        """Pull results of analysis"""
-        self._logger.info("Pulling results of analysis")
-        cmd = [
-            self.mainConfiguration.adbPath,
-            "-s",
-            self.serialNumber,
-            "pull",
-            "/sdcard/hooker/events.logs",
-            "{0}{1}-events.logs".format(self.mainConfiguration.androidTemporaryPath,
-                            datetime.datetime.now().strftime("%Y-%m-%d-%H:%M"))
-        ]
-        OSCommand.executeAsyncCommand(cmd)
-        self._logger.info("Event logs has been pulled in {0}".format(self.mainConfiguration.androidTemporaryPath))
+        self.state = AndroidDevice.STATE_STARTING
 
         
     def __restoreSDCard(self):
@@ -206,7 +192,7 @@ class PhysicalDevice(AndroidDevice):
         clean = True
         
         # Pull our analysis events
-        self.__pullResults()
+        self._pullResults()
 
         # Ask user if they want to clean the device
         if askUser:
@@ -230,7 +216,8 @@ class PhysicalDevice(AndroidDevice):
                 "reboot",
                 "recovery"
             ]
-            OSCommand.executeAsyncCommand(cmd)
+            self._logger.debug(OSCommand.executeCommand(cmd))
+            
             time.sleep(30)
             self._waitForDeviceToBeReady()
             
@@ -239,7 +226,6 @@ class PhysicalDevice(AndroidDevice):
             # When device is ready, don't forget to restore sdcard
             self.__restoreSDCard()
 
-        
     def stimulateWithMonkey(self, packageName):
         """Stimulates application with monkey"""
 
@@ -261,7 +247,10 @@ class PhysicalDevice(AndroidDevice):
             "6000",
             "--ignore-timeouts"
         ]
-        OSCommand.executeAsyncCommand(cmd)
+        p = OSCommand.executeAsyncCommand(cmd)
+        stdout, stderr = p.communicate()
+        self._logger.debug("{0}".format(stdout))
+        
 
 
 

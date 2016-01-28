@@ -35,10 +35,9 @@ class ManualAnalysisConfiguration(object):
     """A container that stores all the parameters of a manual analysis
     """
 
-    def __init__(self, apkFiles, name=None, maxNumberOfEmulators=1, prepareAPKs=None, backupDirectory=None):
+    def __init__(self, apkFiles, maxNumberOfEmulators=1, prepareAPKs=None, backupDirectory=None):
         self.apkFiles = apkFiles
         self.prepareAPKs = prepareAPKs
-        self.name = name
         self.maxNumberOfEmulators = maxNumberOfEmulators
         self.backupDirectory = backupDirectory
 
@@ -46,7 +45,6 @@ class ManualAnalysisConfiguration(object):
         """toString method"""
         lines = [
             "Manual Analysis Conf.:",
-            "\t- Name\t\t\t{0}".format(self.name),
             "\t- APKs\t\t\t{0}".format(','.join(self.apkFiles)),
             "\t- Nb Emulators\t\t{0}".format(self.maxNumberOfEmulators),
             "\t- Preparation APKs\t{0}".format(','.join(self.prepareAPKs)),
@@ -65,18 +63,6 @@ class ManualAnalysisConfiguration(object):
         if len(apkFiles)==0:
             raise Exception("At least one apk must be specified.")
         self.__apkFiles = apkFiles
-        
-    @property
-    def name(self):
-        """The name of the analysis
-        """
-        return self.__name
-
-    @name.setter
-    def name(self, name):
-        if name is None:
-            name = "UnamedAnalysis"
-        self.__name = name
         
     @property
     def maxNumberOfEmulators(self):

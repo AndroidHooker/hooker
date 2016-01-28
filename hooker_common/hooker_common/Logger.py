@@ -76,7 +76,7 @@ except Exception, e:
     print "ERRROR: "+str(e)
     has_colour = False
  
-def getLogger(name=None, fmt='[%(processName)s/%(threadName)s/%(levelname)s] %(relativeCreated)d: %(message)s'):
+def getLogger(name=None, fmt='[%(processName)s/%(filename)s:%(lineno)s/%(levelname)s] %(relativeCreated)d: %(message)s'):
     """ Get and initialize a colourised logging instance if the system supports
     it as defined by the log.has_colour
  

@@ -42,8 +42,8 @@ class OSCommand(object):
     def executeAsyncCommand(commandAndArgs):
         logger = Logger.getLogger(__name__)
         logger.debug("Executing Asynchronous command {0}".format(commandAndArgs))
-
-        return subprocess.Popen(commandAndArgs)
+        return subprocess.Popen(commandAndArgs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #return subprocess.Popen(commandAndArgs)
 
     @staticmethod
     def executeCommand(commandAndArgs):
