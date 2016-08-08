@@ -106,11 +106,11 @@ public class SharedPreferencesHooker extends Hooker {
     methodsToHook.put("remove", 0);
 
     try {
-      hookMethods(null, "android.content.SharedPreferences.Editor", methodsToHook);
-      SubstrateMain.log("hooking android.content.SharedPreferences.Editor methods sucessful");
+      hookMethods(null, "android.app.SharedPreferencesImpl$EditorImpl", methodsToHook);
+      SubstrateMain.log("hooking android.app.SharedPreferencesImpl$EditorImpl methods sucessful");
 
     } catch (HookerInitializationException e) {
-      SubstrateMain.log("hooking android.content.SharedPreferences.Editor methods has failed", e);
+      SubstrateMain.log("hooking android.app.SharedPreferencesImpl$EditorImpl methods has failed", e);
     }
 
   }
